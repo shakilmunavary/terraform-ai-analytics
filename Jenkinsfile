@@ -23,7 +23,7 @@ pipeline {
                  sh """
                    pwd
                    ls -ltr
-                   mv  -f $GIT_REPO_NAME $TF_DIR
+                   cp  -f $GIT_REPO_NAME $TF_DIR
                  """
             }
         }
