@@ -30,13 +30,34 @@ pipeline {
         
         stage('Run Terraform Plan & Send to Mistral') {
             steps {
-                    sh "cd $TF_DIR/$GIT_REPO_NAME"
+                    sh "$TF_DIR/$GIT_REPO_NAME"
                     sh "terraform init"
                     sh "terraform plan -out=tfplan.log | tee terraform_plan.log"
+                    withCredentials([string(credentialsId: 'MISTRAL_API_KEY', variable: 'API_KEY')]) {
+                        sh """
+                        curl -X POST $MISTRAL_API \\
+                             -H 'Authorization: Bearer $API_KEY' \\
+                             -H 'Content-Type: application/json' \\
+                             -d '{
+                                 "model": "mistral-large-latest",
+                                 "prompt": "Analyze the Terraform plan and format the resource changes in a structured table with Resource Name, Action (Added/Deleted/Updated), and Estimated Cost."
+                             }' > mistral_response.json
+                        """
+                }
             }
-
         }
-
+        stage('Parse & Display Mistral Recommendations') {
+            steps {
+                script {
+                    def mistralResponse = readJSON(file: "${TF_DIR}/mistral_response.json")
+                    echo "========== Mistral AI Recommendations =========="
+                    echo String.format("%-30s %-15s %-10s", "Resource", "Action", "Estimated Cost")
+                    mistralResponse.recommendations.each { recommendation ->
+                        echo String.format("%-30s %-15s %-10s", recommendation.resource, recommendation.action, recommendation.cost)
+                    }
+                }
+            }
+        }
         stage('Manual Approval') {
             steps {
                 input "Approve Terraform Deployment?"
