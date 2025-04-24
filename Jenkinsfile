@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('Checkout Terraform Code') {
             steps {
-                sh "cd $TF_DIR"
+                sh "cd $TF_DIR/terraform"
                 withCredentials([string(credentialsId: 'github-key', variable: 'GIT_TOKEN')]) {
                     sh "git clone https://$GIT_TOKEN@$GIT_REPO $TF_DIR"
                 }
