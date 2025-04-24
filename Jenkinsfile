@@ -19,7 +19,7 @@ pipeline {
             steps {
                  sh """
                    pwd
-                   mv -rf $GIT_REPO_NAME $TF_DIR
+                   mv  $GIT_REPO_NAME $TF_DIR
                  """
             }
         }
@@ -27,6 +27,7 @@ pipeline {
         stage('Run Terraform Plan & Send to Mistral') {
             steps {
                 dir(TF_DIR) {
+                    sh "$GIT_REPO_NAME"
                     sh "terraform init"
                     sh "terraform plan -out=tfplan.log | tee terraform_plan.log"
                     withCredentials([string(credentialsId: 'MISTRAL_API_KEY', variable: 'API_KEY')]) {
