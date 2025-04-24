@@ -23,18 +23,20 @@ pipeline {
                  sh """
                    pwd
                    ls -ltr
-                   cp  -rf $GIT_REPO_NAME $TF_DIR
+                   cp -rf $GIT_REPO_NAME $TF_DIR
                  """
             }
         }
         
         stage('Run Terraform Plan & Send to Mistral') {
             steps {
-
-                   sh "cd $TF_DIR/$GIT_REPO_NAME"
+                dir("$TF_DIR/$GIT_REPO_NAME") {
                     sh "terraform init"
                     sh "terraform plan -out=tfplan.log | tee terraform_plan.log"
+                }
 
+                script {
+                    def tfPlanContent = readFile("${TF_DIR}/${GIT_REPO_NAME}/terraform_plan.log")
                     withCredentials([string(credentialsId: 'MISTRAL_API_KEY', variable: 'API_KEY')]) {
                         sh """
                         curl -X POST $MISTRAL_API \\
@@ -42,9 +44,11 @@ pipeline {
                              -H 'Content-Type: application/json' \\
                              -d '{
                                  "model": "mistral-large-latest",
-                                 "prompt": "Analyze the Terraform plan and format the resource changes in a structured table with Resource Name, Action (Added/Deleted/Updated), and Estimated Cost."
-                             }' > mistral_response.json
+                                 "prompt": "Analyze the Terraform plan and format the resource changes in a structured table with Resource Name, Action (Added/Deleted/Updated), and Estimated Cost.",
+                                 "plan": "${tfPlanContent.replaceAll('\n', '\\n')}"
+                             }' > ${TF_DIR}/mistral_response.json
                         """
+                    }
                 }
             }
         }
