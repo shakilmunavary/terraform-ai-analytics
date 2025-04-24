@@ -30,7 +30,8 @@ pipeline {
         
         stage('Run Terraform Plan & Send to Mistral') {
             steps {
-                    sh "$TF_DIR/$GIT_REPO_NAME"
+
+                   sh "cd $TF_DIR/$GIT_REPO_NAME"
                     sh "terraform init"
                     sh "terraform plan -out=tfplan.log | tee terraform_plan.log"
                 /*
