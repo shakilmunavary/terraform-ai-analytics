@@ -19,6 +19,7 @@ pipeline {
             steps {
                  sh """
                    pwd
+                   ls -ltr
                    mv  $GIT_REPO_NAME $TF_DIR
                  """
             }
