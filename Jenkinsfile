@@ -32,13 +32,15 @@ pipeline {
             steps {
                 dir("$TF_DIR/$GIT_REPO_NAME/terraform") {
                     sh "terraform init"
-                    sh "terraform plan -out=tfplan.log | tee terraform_plan.log"
+                    sh "terraform plan -out=tfplan.log "
                 }
 
                 script {
-                    def tfPlanContent = readFile("${TF_DIR}/${GIT_REPO_NAME}/terraform/terraform_plan.log")
+                    def tfPlanContent = readFile("${TF_DIR}/${GIT_REPO_NAME}/terraform/tfplan.log")
                     withCredentials([string(credentialsId: 'MISTRAL_API_KEY', variable: 'API_KEY')]) {
                         sh """
+                        echo "TERRA FORM PLAN"
+                        cat $tfPlanContent
                         curl -X POST $MISTRAL_API \\
                              -H 'Authorization: Bearer $API_KEY' \\
                              -H 'Content-Type: application/json' \\
