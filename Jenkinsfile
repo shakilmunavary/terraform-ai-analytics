@@ -12,6 +12,7 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 sh """
+                 rm -rf $GIT_REPO_NAME
                  git clone 'https://github.com/shakilmunavary/terraform-ai-analytics.git'
                 """
             }
