@@ -32,7 +32,7 @@ pipeline {
             steps {
                 dir("$TF_DIR/$GIT_REPO_NAME/terraform") {
                     sh "terraform init"
-                    sh "terraform plan -out=tfplan.log "
+                    sh "terraform plan > tfplan.log "
                 }
 
                 script {
