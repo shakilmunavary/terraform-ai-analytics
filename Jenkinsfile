@@ -13,7 +13,7 @@ pipeline {
             steps {
                 sh "echo 'Started Working'"
                 withCredentials([string(credentialsId: 'GitHubApiKey', variable: 'GIT_TOKEN')]) {
-                    sh "git clone https://$GIT_TOKEN@$GIT_REPO $TF_DIR"
+                    sh "git clone $GIT_TOKEN@$GIT_REPO $TF_DIR"
                 }
             }
         }
