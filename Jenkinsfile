@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/shakilmunavary/terraform-ai-analytics.git'
+                git clone 'https://github.com/shakilmunavary/terraform-ai-analytics.git'
             }
         }
 
