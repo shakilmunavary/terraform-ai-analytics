@@ -36,7 +36,7 @@ pipeline {
                 }
 
                 script {
-                    def tfPlanContent = readFile("${TF_DIR}/${GIT_REPO_NAME}/terraform_plan.log")
+                    def tfPlanContent = readFile("${TF_DIR}/${GIT_REPO_NAME}/terraform/terraform_plan.log")
                     withCredentials([string(credentialsId: 'MISTRAL_API_KEY', variable: 'API_KEY')]) {
                         sh """
                         curl -X POST $MISTRAL_API \\
