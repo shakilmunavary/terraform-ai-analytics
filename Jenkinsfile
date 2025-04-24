@@ -1,22 +1,29 @@
 pipeline {
     agent any
     environment {
-        TF_DIR = "/home/shakil/terra-analyze-ai/terraform-ai-analytics"
+        TF_DIR = "/home/shakil/terra-analyze-ai/"
+        GIT_REPO_NAME= "terraform-ai-analytics"
         TF_STATE = "/home/shakil/terra-analyze-ai/terraform-ai-analytics/terraform.tfstate"
-        GIT_CREDENTIALS = credentials('GitHubApiKey')
         MISTRAL_API_KEY = credentials('MISTRAL_API_KEY')
-        GIT_REPO = "https://github.com/shakilmunavary/terraform-ai-analytics.git"
         MISTRAL_API = "https://api.mistral.ai/v1/chat/completions"
     }
+
     stages {
         stage('Clone Repository') {
             steps {
-                sh "echo 'Started Working'"
-                withCredentials([string(credentialsId: 'GitHubApiKey', variable: 'GIT_TOKEN')]) {
-                    sh "git clone $GIT_TOKEN@$GIT_REPO $TF_DIR"
-                }
+                git 'https://github.com/shakilmunavary/terraform-ai-analytics.git'
             }
         }
+
+        stage('Move To Working Directory') {
+            steps {
+                 sh """
+                   pwd
+                   mv -rf $GIT_REPO_NAME $TF_DIR
+                 """
+            }
+        }
+        
         stage('Run Terraform Plan & Send to Mistral') {
             steps {
                 dir(TF_DIR) {
