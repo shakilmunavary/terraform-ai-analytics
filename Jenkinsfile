@@ -36,19 +36,16 @@ pipeline {
                 }
 
                 script {
-                    def tfPlanContent = readFile("${TF_DIR}/${GIT_REPO_NAME}/terraform/tfplan.log")
                     withCredentials([string(credentialsId: 'MISTRAL_API_KEY', variable: 'API_KEY')]) {
                         sh """
                         echo "TERRA FORM PLAN"
-                        cat $tfPlanContent
                         curl -X POST $MISTRAL_API \\
                              -H 'Authorization: Bearer $API_KEY' \\
-                             -H 'Content-Type: application/json' \\
-                             -d '{
-                                 "model": "mistral-large-latest",
-                                 "prompt": "Analyze the Terraform plan and format the resource changes in a structured table with Resource Name, Action (Added/Deleted/Updated), and Estimated Cost.",
-                                 "plan": "${tfPlanContent.replaceAll('\n', '\\n')}"
-                             }' > ${TF_DIR}/mistral_response.json
+                             -H 'Content-Type: multipart/form-data' \\
+                             -F "model=mistral-large-latest" \\
+                             -F "prompt=Analyze the Terraform plan and give recommendation. And also format the resource changes in a structured table with Resource Name, Action (Added/Deleted/Updated), and Estimated Cost." \\
+                             -F "file=@$TF_DIR/$GIT_REPO_NAME/terraform/tfplan.log" \\
+                             > ${TF_DIR}/mistral_response.json
                         """
                     }
                 }
