@@ -1,32 +1,37 @@
 pipeline {
     agent any
     environment {
-        TF_DIR = "/home/shakil/terra-analyze-ai/"
-        TF_STATE = "/home/shakil/terra-analyze-ai/terraform.tfstate"
-        GIT_CREDENTIALS = credentials('GitHubApiKey')
-        MISTRAL_API_KEY = credentials('MISTRAL_API_KEY')
-        GIT_REPO = "https://github.com/shakilmunavary/terraform-ai-analytics.git"
-        MISTRAL_API = "https://api.mistral.ai/v1/chat/completions"
-        GIT_REPO_FOLDER="terraform-ai-analytics"
+        TF_DIR = "/home/shakil/terraformtest"
+        TF_STATE = "/home/shakil/terraformtest/terraform.tfstate"
+        GIT_CREDENTIALS = credentials('github-key')
+        MISTRAL_API_KEY = credentials('mistral-api-key')
+        GIT_REPO = "https://github.com/shakilmunavary/AI-Powered-Jenkins-BuildFailure-Management.git"
+        MISTRAL_API = "your-mistral-api-url"
     }
     stages {
-        stage('Checkout Terraform Code') {
+        stage('Clone Repository') {
             steps {
-                sh "cd $TF_DIR/terraform"
+                sh "rm -rf $TF_DIR && mkdir -p $TF_DIR"
                 withCredentials([string(credentialsId: 'github-key', variable: 'GIT_TOKEN')]) {
                     sh "git clone https://$GIT_TOKEN@$GIT_REPO $TF_DIR"
                 }
             }
         }
-
         stage('Run Terraform Plan & Send to Mistral') {
             steps {
                 dir(TF_DIR) {
-                    sh "cd terraform-ai-analytics"
                     sh "terraform init"
                     sh "terraform plan -out=tfplan.log | tee terraform_plan.log"
-                    withCredentials([string(credentialsId: 'MISTRAL_API_KEY', variable: 'MISTRAL_API_KEY')]) {
-                        sh "curl -X POST -H 'Authorization: Bearer $MISTRAL_API_KEY' -d @terraform_plan.log $MISTRAL_API > mistral_response.json"
+                    withCredentials([string(credentialsId: 'mistral-api-key', variable: 'API_KEY')]) {
+                        sh """
+                        curl -X POST $MISTRAL_API \\
+                             -H 'Authorization: Bearer $API_KEY' \\
+                             -H 'Content-Type: application/json' \\
+                             -d '{
+                                 "model": "mistral-large-latest",
+                                 "prompt": "Analyze the Terraform plan and format the resource changes in a structured table with Resource Name, Action (Added/Deleted/Updated), and Estimated Cost."
+                             }' > mistral_response.json
+                        """
                     }
                 }
             }
@@ -36,8 +41,9 @@ pipeline {
                 script {
                     def mistralResponse = readJSON(file: "${TF_DIR}/mistral_response.json")
                     echo "========== Mistral AI Recommendations =========="
+                    echo String.format("%-30s %-15s %-10s", "Resource", "Action", "Estimated Cost")
                     mistralResponse.recommendations.each { recommendation ->
-                        echo "🔹 ${recommendation}"
+                        echo String.format("%-30s %-15s %-10s", recommendation.resource, recommendation.action, recommendation.cost)
                     }
                 }
             }
@@ -50,7 +56,7 @@ pipeline {
         stage('Deploy Terraform Code') {
             steps {
                 dir(TF_DIR) {
-                    sh "Deploying the Code"
+                    sh "echo 'Are we okay to deploy'"
                 }
             }
         }
