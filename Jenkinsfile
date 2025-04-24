@@ -31,11 +31,12 @@ pipeline {
         stage('Run Terraform Plan & Send to Mistral') {
             steps {
                 dir(TF_DIR) {
-                    sh "$GIT_REPO_NAME"
+                    sh "cd $GIT_REPO_NAME"
                     sh "terraform init"
                     sh "terraform plan -out=tfplan.log | tee terraform_plan.log"
                 }
             }
+
         }
 
         stage('Manual Approval') {
