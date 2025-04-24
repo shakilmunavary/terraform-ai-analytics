@@ -33,6 +33,7 @@ pipeline {
                     sh "$TF_DIR/$GIT_REPO_NAME"
                     sh "terraform init"
                     sh "terraform plan -out=tfplan.log | tee terraform_plan.log"
+                /*
                     withCredentials([string(credentialsId: 'MISTRAL_API_KEY', variable: 'API_KEY')]) {
                         sh """
                         curl -X POST $MISTRAL_API \\
@@ -44,6 +45,7 @@ pipeline {
                              }' > mistral_response.json
                         """
                 }
+                */
             }
         }
         stage('Parse & Display Mistral Recommendations') {
