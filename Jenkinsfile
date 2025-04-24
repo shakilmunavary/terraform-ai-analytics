@@ -64,17 +64,6 @@ pipeline {
                 }
             }
         }
-        stage('Manual Approval') {
-            steps {
-                input "Approve Terraform Deployment?"
-            }
-        }
-        stage('Deploy Terraform Code') {
-            steps {
-                dir(TF_DIR) {
-                    sh "terraform apply -auto-approve tfplan.log"
-                }
-            }
-        }
-    }
+
+   }
 }
