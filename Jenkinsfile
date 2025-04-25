@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         TF_DIR = "/home/shakil/terra-analyze-ai/"
-        GIT_REPO_NAME= "terraform-ai-analytics"
+        GIT_REPO_NAME = "terraform-ai-analytics"
         TF_STATE = "/home/shakil/terra-analyze-ai/terraform-ai-analytics/terraform.tfstate"
         MISTRAL_API_KEY = credentials('MISTRAL_API_KEY')
         MISTRAL_API = "https://api.mistral.ai/v1/chat/completions"
@@ -38,33 +38,30 @@ pipeline {
                                 terraform init
                                 terraform plan -out=tfplan
                                 terraform show -json tfplan > tfplan.json
-                                PLAN_FILE_CONTENT=$(cat tfplan.json)
-                                ESCAPED_PLAN_FILE_CONTENT=$(jq -Rs . <<< "$PLAN_FILE_CONTENT")
-                                
+                                PLAN_FILE_CONTENT=\$(cat tfplan.json)
+                                ESCAPED_PLAN_FILE_CONTENT=\$(jq -Rs . <<< "\$PLAN_FILE_CONTENT")
                                 
                                 curl -X POST "https://api.mistral.ai/v1/chat/completions" \
-                                     -H "Authorization: Bearer $API_KEY" \
+                                     -H "Authorization: Bearer \$API_KEY" \
                                      -H "Content-Type: application/json" \
                                      -d '{
                                            "model": "mistral-large-latest",
                                            "messages": [
                                              { "role": "system", "content": "Analyze the terraform plan and recommend any suggestions. Also put all the resources in tabular format like Resource Name, Actions status Addition or Deletion or Update, Whats being changed, Cost) " },
-                                             { "role": "user", "content": '"$ESCAPED_PLAN_FILE_CONTENT"' }
+                                             { "role": "user", "content": '"\$ESCAPED_PLAN_FILE_CONTENT"' }
                                            ],
                                            "max_tokens": 5000
                                          }' > ${TF_DIR}/ai_response.json
                                 
-                                
                                 # Read the JSON file
                                 cd $TF_DIR
-                                JSON_CONTENT=$(cat ai_response.json)
+                                JSON_CONTENT=\$(cat ai_response.json)
                                 
                                 # Extract and format the 'content' field
-                                FORMATTED_CONTENT=$(echo "$JSON_CONTENT" | jq '.choices[0].message.content')
+                                FORMATTED_CONTENT=\$(echo "\$JSON_CONTENT" | jq '.choices[0].message.content')
                                 
                                 # Print the formatted content to the console
-                                echo "$FORMATTED_CONTENT
-                            
+                                echo "\$FORMATTED_CONTENT"
                         """
                     }
                 }
@@ -73,7 +70,7 @@ pipeline {
         stage('Parse & Display Mistral Recommendations') {
             steps {
                 script {
-                    def mistralResponse = readJSON(file: "${TF_DIR}/mistral_response.json")
+                    def mistralResponse = readJSON(file: "${TF_DIR}/ai_response.json")
                     echo "========== Mistral AI Recommendations =========="
                     echo String.format("%-30s %-15s %-10s", "Resource", "Action", "Estimated Cost")
                     mistralResponse.recommendations.each { recommendation ->
@@ -82,6 +79,5 @@ pipeline {
                 }
             }
         }
-
-   }
+    }
 }
