@@ -33,14 +33,17 @@ pipeline {
                  script {
                     withCredentials([string(credentialsId: 'MISTRAL_API_KEY', variable: 'API_KEY')]) {
                         sh """
+                        #!/bin/bash
                         echo "TERRA FORM PLAN"
                                 cd $TF_DIR/$GIT_REPO_NAME/terraform
                                 terraform init
                                 terraform plan -out=tfplan
                                 terraform show -json tfplan > tfplan.json
+                                
+                                # Use bash for command substitution
                                 PLAN_FILE_CONTENT=\$(cat tfplan.json)
                                 ESCAPED_PLAN_FILE_CONTENT=\$(jq -Rs . <<< "\$PLAN_FILE_CONTENT")
-                                /*
+                                
                                 curl -X POST "https://api.mistral.ai/v1/chat/completions" \
                                      -H "Authorization: Bearer \$API_KEY" \
                                      -H "Content-Type: application/json" \
@@ -52,7 +55,7 @@ pipeline {
                                            ],
                                            "max_tokens": 5000
                                          }' > ${TF_DIR}/ai_response.json
-                                */
+                                
                                 # Read the JSON file
                                 cd $TF_DIR
                                 JSON_CONTENT=\$(cat ai_response.json)
