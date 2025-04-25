@@ -40,6 +40,14 @@ pipeline {
                                 terraform plan -out=tfplan
                                 terraform show -json tfplan > tfplan.json
                                 
+                                # Ensure jq is installed
+                                if ! command -v jq &> /dev/null
+                                then
+                                    echo "jq could not be found, installing..."
+                                    sudo apt-get update
+                                    sudo apt-get install -y jq
+                                fi
+                                
                                 # Use bash for command substitution
                                 PLAN_FILE_CONTENT=\$(cat tfplan.json)
                                 ESCAPED_PLAN_FILE_CONTENT=\$(jq -Rs . <<< "\$PLAN_FILE_CONTENT")
