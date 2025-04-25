@@ -40,13 +40,18 @@ pipeline {
                                 terraform plan -out=tfplan
                                 terraform show -json tfplan > tfplan.json
                                 
-                                # Ensure jq is installed
+                                # Ensure jq is installed and has execute permissions
                                 if ! command -v jq &> /dev/null
                                 then
                                     echo "jq could not be found, installing..."
                                     sudo apt-get update
                                     sudo apt-get install -y jq
                                 fi
+                                sudo chmod +x /usr/bin/jq
+                                
+                                # Ensure the ai_response.json file has the correct permissions
+                                touch ${TF_DIR}/ai_response.json
+                                chmod 666 ${TF_DIR}/ai_response.json
                                 
                                 # Read the JSON file content
                                 PLAN_FILE_CONTENT=\$(cat tfplan.json | jq -Rs .)
@@ -62,16 +67,22 @@ pipeline {
                                            ],
                                            "max_tokens": 5000
                                          }' > ${TF_DIR}/ai_response.json
-                                         
-                                 jq -r '.choices[0].message.content' ai_response.json > output.html
-
-                         """
+                                
+                                # Extract HTML content and save as output.html
+                                jq -r '.choices[0].message.content' ${TF_DIR}/ai_response.json > ${TF_DIR}/output.html
+                        """
                     }
                 }
             }
         }
+    }
 
-
-        
+    post {
+        always {
+            script {
+                // Print the HTML content to the console
+                sh "cat ${TF_DIR}/output.html"
+            }
+        }
     }
 }
