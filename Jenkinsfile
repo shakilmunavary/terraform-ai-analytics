@@ -96,12 +96,6 @@ pipeline {
                 alwaysLinkToLastBuild: true
             ])
 
-            emailext (
-                subject: "Build ${currentBuild.fullDisplayName}",
-                body: '${FILE,path="${TF_DIR}/output.html"}',
-                mimeType: 'text/html',
-                to: 'shakil.ahamed@gmail.com'
-            )
-        }
+       }
     }
 }
