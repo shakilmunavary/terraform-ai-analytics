@@ -10,14 +10,6 @@ pipeline {
     }
 
     stages {
-        stage('Set CSP') {
-            steps {
-                script {
-                    System.setProperty("hudson.model.DirectoryBrowserSupport.CSP", "")
-                }
-            }
-        }
-
         stage('Clone Repository') {
             steps {
                 sh """
