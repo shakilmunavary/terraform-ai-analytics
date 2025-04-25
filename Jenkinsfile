@@ -57,28 +57,44 @@ pipeline {
                                      -d '{
                                            "model": "mistral-large-latest",
                                            "messages": [
-                                             { "role": "system", "content": "Convert the following JSON to HTML format." },
+                                             { "role": "system", "content": "Analyze the terraform plan and recommend any suggestions. Also put all the resources in tabular format like Resource Name, Actions status Addition or Deletion or Update, Whats being changed, Cost) " },
                                              { "role": "user", "content": '"\$PLAN_FILE_CONTENT"' }
                                            ],
                                            "max_tokens": 5000
+                                         }' > ${TF_DIR}/ai_response.json
+                                cd $TF_DIR/
+                                AI_REPONSE_JSON=\$(cat ai_response.json | jq -Rs .)
+                                
+                                curl -X POST "https://api.mistral.ai/v1/chat/completions" \
+                                     -H "Authorization: Bearer \$API_KEY" \
+                                     -H "Content-Type: application/json" \
+                                     -d '{
+                                           "model": "mistral-large-latest",
+                                           "messages": [
+                                             { "role": "system", "content": "Please read the json file and give me an html equvalent file for better readability " },
+                                             { "role": "user", "content": '"\$AI_REPONSE_JSON"' }
+                                           ],
+                                           "max_tokens": 5000
                                          }' > ${TF_DIR}/ai_response.html
+
+
+
                         """
                     }
                 }
             }
         }
-    }
-
-    post {
-        always {
-            publishHTML([
-                reportName: 'Mistral AI Response',
-                reportDir: "${TF_DIR}",
-                reportFiles: 'ai_response.html',
-                keepAll: true,
-                allowMissing: false,
-                alwaysLinkToLastBuild: true
-            ])
+        stage('Parse & Display Mistral Recommendations') {
+            steps {
+                script {
+                    def mistralResponse = readJSON(file: "${TF_DIR}/ai_response.html")
+                    echo "========== Mistral AI Recommendations =========="
+                    echo String.format("%-30s %-15s %-10s", "Resource", "Action", "Estimated Cost")
+                    mistralResponse.recommendations.each { recommendation ->
+                        echo String.format("%-30s %-15s %-10s", recommendation.resource, recommendation.action, recommendation.cost)
+                    }
+                }
+            }
         }
     }
 }
