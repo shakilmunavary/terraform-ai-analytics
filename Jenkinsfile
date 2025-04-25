@@ -79,10 +79,14 @@ pipeline {
 
     post {
         always {
-            script {
-                // Print the HTML content to the console
-                sh "cat ${TF_DIR}/output.html"
-            }
+            publishHTML([
+                reportName: 'Mistral AI Response',
+                reportDir: "${TF_DIR}",
+                reportFiles: 'output.html',
+                keepAll: true,
+                allowMissing: false,
+                alwaysLinkToLastBuild: true
+            ])
         }
     }
 }
