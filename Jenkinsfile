@@ -62,7 +62,7 @@ pipeline {
                                      -d '{
                                            "model": "mistral-large-latest",
                                            "messages": [
-                                             { "role": "system", "content": "Analyze the terraform plan and recommend any suggestions. Also put all the resources in tabular format like Resource Name, Actions status Addition or Deletion or Update, Whats being changed, Cost. Give me your response content in html format instead of json so that I can parse it easy.) " },
+                                             { "role": "system", "content": "Analyze the terraform plan and recommend any suggestions. Also put all the resources in tabular format like Resource Name, Actions status Addition or Deletion or Update, Whats being changed, Cost. Give me your response content in beautiful html format with good theme and look and feel instead of json.) " },
                                              { "role": "user", "content": '"\$PLAN_FILE_CONTENT"' }
                                            ],
                                            "max_tokens": 5000
@@ -79,14 +79,10 @@ pipeline {
 
     post {
         always {
-            publishHTML([
-                reportName: 'Mistral AI Response',
-                reportDir: "${TF_DIR}",
-                reportFiles: 'output.html',
-                keepAll: true,
-                allowMissing: false,
-                alwaysLinkToLastBuild: true
-            ])
+            script {
+                // Print the HTML content to the console
+                sh "cat ${TF_DIR}/output.html"
+            }
         }
     }
 }
