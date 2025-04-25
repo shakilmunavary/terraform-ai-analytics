@@ -62,7 +62,9 @@ pipeline {
                                            ],
                                            "max_tokens": 5000
                                          }' > ${TF_DIR}/ai_response.json
-                               
+                                         
+                                 jq -r '.choices[0].message.content' ai_response.json > output.html
+
                                 /*
                                 cd $TF_DIR/
                                 AI_REPONSE_JSON=\$(cat ai_response.json | jq -Rs .)
