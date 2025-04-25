@@ -48,9 +48,8 @@ pipeline {
                                     sudo apt-get install -y jq
                                 fi
                                 
-                                # Use bash for command substitution
-                                PLAN_FILE_CONTENT=\$(cat tfplan.json)
-                                ESCAPED_PLAN_FILE_CONTENT=\$(jq -Rs . <<< "\$PLAN_FILE_CONTENT")
+                                # Read the JSON file content
+                                PLAN_FILE_CONTENT=\$(cat tfplan.json | jq -Rs .)
                                 
                                 curl -X POST "https://api.mistral.ai/v1/chat/completions" \
                                      -H "Authorization: Bearer \$API_KEY" \
@@ -59,7 +58,7 @@ pipeline {
                                            "model": "mistral-large-latest",
                                            "messages": [
                                              { "role": "system", "content": "Analyze the terraform plan and recommend any suggestions. Also put all the resources in tabular format like Resource Name, Actions status Addition or Deletion or Update, Whats being changed, Cost) " },
-                                             { "role": "user", "content": '"\$ESCAPED_PLAN_FILE_CONTENT"' }
+                                             { "role": "user", "content": '"\$PLAN_FILE_CONTENT"' }
                                            ],
                                            "max_tokens": 5000
                                          }' > ${TF_DIR}/ai_response.json
