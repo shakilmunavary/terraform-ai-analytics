@@ -6,6 +6,7 @@ pipeline {
         TF_STATE = "/home/shakil/terra-analyze-ai/terraform-ai-analytics/terraform.tfstate"
         MISTRAL_API_KEY = credentials('MISTRAL_API_KEY')
         MISTRAL_API = "https://api.mistral.ai/v1/chat/completions"
+        INFRACOST_APIKEY =credentials('INFRACOST_APIKEY')
     }
 
     stages {
