@@ -65,25 +65,7 @@ pipeline {
                                          
                                  jq -r '.choices[0].message.content' ai_response.json > output.html
 
-                                /*
-                                cd $TF_DIR/
-                                AI_REPONSE_JSON=\$(cat ai_response.json | jq -Rs .)
-                                
-                                curl -X POST "https://api.mistral.ai/v1/chat/completions" \
-                                     -H "Authorization: Bearer \$API_KEY" \
-                                     -H "Content-Type: application/json" \
-                                     -d '{
-                                           "model": "mistral-large-latest",
-                                           "messages": [
-                                             { "role": "system", "content": "Please read the json file and give me an html equvalent file for better readability " },
-                                             { "role": "user", "content": '"\$AI_REPONSE_JSON"' }
-                                           ],
-                                           "max_tokens": 5000
-                                         }' > ${TF_DIR}/ai_response.html
-                                    */
-
-
-                        """
+                         """
                     }
                 }
             }
