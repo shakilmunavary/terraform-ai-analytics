@@ -57,37 +57,28 @@ pipeline {
                                      -d '{
                                            "model": "mistral-large-latest",
                                            "messages": [
-                                             { "role": "system", "content": "Analyze the terraform plan and recommend any suggestions. Also put all the resources in tabular format like Resource Name, Actions status Addition or Deletion or Update, Whats being changed, Cost) " },
+                                             { "role": "system", "content": "Convert the following JSON to HTML format." },
                                              { "role": "user", "content": '"\$PLAN_FILE_CONTENT"' }
                                            ],
                                            "max_tokens": 5000
-                                         }' > ${TF_DIR}/ai_response.json
-                                
-                                # Read the JSON file
-                                cd $TF_DIR
-                                JSON_CONTENT=\$(cat ai_response.json)
-                                
-                                # Extract and format the 'content' field
-                                FORMATTED_CONTENT=\$(echo "\$JSON_CONTENT" | jq '.choices[0].message.content')
-                                
-                                # Print the formatted content to the console
-                                echo "\$FORMATTED_CONTENT"
+                                         }' > ${TF_DIR}/ai_response.html
                         """
                     }
                 }
             }
         }
-        stage('Parse & Display Mistral Recommendations') {
-            steps {
-                script {
-                    def mistralResponse = readJSON(file: "${TF_DIR}/ai_response.json")
-                    echo "========== Mistral AI Recommendations =========="
-                    echo String.format("%-30s %-15s %-10s", "Resource", "Action", "Estimated Cost")
-                    mistralResponse.recommendations.each { recommendation ->
-                        echo String.format("%-30s %-15s %-10s", recommendation.resource, recommendation.action, recommendation.cost)
-                    }
-                }
-            }
+    }
+
+    post {
+        always {
+            publishHTML([
+                reportName: 'Mistral AI Response',
+                reportDir: "${TF_DIR}",
+                reportFiles: 'ai_response.html',
+                keepAll: true,
+                allowMissing: false,
+                alwaysLinkToLastBuild: true
+            ])
         }
     }
 }
