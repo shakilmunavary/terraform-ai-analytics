@@ -70,17 +70,8 @@ pipeline {
                 }
             }
         }
-        stage('Parse & Display Mistral Recommendations') {
-            steps {
-                script {
-                    def mistralResponse = readJSON(file: "${TF_DIR}/ai_response.html")
-                    echo "========== Mistral AI Recommendations =========="
-                    echo String.format("%-30s %-15s %-10s", "Resource", "Action", "Estimated Cost")
-                    mistralResponse.recommendations.each { recommendation ->
-                        echo String.format("%-30s %-15s %-10s", recommendation.resource, recommendation.action, recommendation.cost)
-                    }
-                }
-            }
-        }
+
+
+        
     }
 }
