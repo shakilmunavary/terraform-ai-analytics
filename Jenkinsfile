@@ -57,11 +57,13 @@ pipeline {
                                      -d '{
                                            "model": "mistral-large-latest",
                                            "messages": [
-                                             { "role": "system", "content": "Analyze the terraform plan and recommend any suggestions. Also put all the resources in tabular format like Resource Name, Actions status Addition or Deletion or Update, Whats being changed, Cost) " },
+                                             { "role": "system", "content": "Analyze the terraform plan and recommend any suggestions. Also put all the resources in tabular format like Resource Name, Actions status Addition or Deletion or Update, Whats being changed, Cost. Give me your response content in html format instead of json so that I can parse it easy.) " },
                                              { "role": "user", "content": '"\$PLAN_FILE_CONTENT"' }
                                            ],
                                            "max_tokens": 5000
                                          }' > ${TF_DIR}/ai_response.json
+                               
+                                /*
                                 cd $TF_DIR/
                                 AI_REPONSE_JSON=\$(cat ai_response.json | jq -Rs .)
                                 
@@ -76,7 +78,7 @@ pipeline {
                                            ],
                                            "max_tokens": 5000
                                          }' > ${TF_DIR}/ai_response.html
-
+                                    */
 
 
                         """
