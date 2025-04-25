@@ -30,22 +30,41 @@ pipeline {
         
         stage('Run Terraform Plan & Send to Mistral') {
             steps {
-                dir("$TF_DIR/$GIT_REPO_NAME/terraform") {
-                    sh "terraform init"
-                    sh "terraform plan > tfplan.log "
-                }
-
-                script {
+                 script {
                     withCredentials([string(credentialsId: 'MISTRAL_API_KEY', variable: 'API_KEY')]) {
                         sh """
                         echo "TERRA FORM PLAN"
-                        curl -X POST $MISTRAL_API \\
-                             -H 'Authorization: Bearer $API_KEY' \\
-                             -H 'Content-Type: multipart/form-data' \\
-                             -F "model=mistral-large-latest" \\
-                             -F "prompt=Analyze the Terraform plan and give recommendation. And also format the resource changes in a structured table with Resource Name, Action (Added/Deleted/Updated), and Estimated Cost." \\
-                             -F "file=@$TF_DIR/$GIT_REPO_NAME/terraform/tfplan.log" \\
-                             > ${TF_DIR}/mistral_response.json
+                                cd $TF_DIR/$GIT_REPO_NAME/terraform
+                                terraform init
+                                terraform plan -out=tfplan
+                                terraform show -json tfplan > tfplan.json
+                                PLAN_FILE_CONTENT=$(cat tfplan.json)
+                                ESCAPED_PLAN_FILE_CONTENT=$(jq -Rs . <<< "$PLAN_FILE_CONTENT")
+                                
+                                
+                                curl -X POST "https://api.mistral.ai/v1/chat/completions" \
+                                     -H "Authorization: Bearer $API_KEY" \
+                                     -H "Content-Type: application/json" \
+                                     -d '{
+                                           "model": "mistral-large-latest",
+                                           "messages": [
+                                             { "role": "system", "content": "Analyze the terraform plan and recommend any suggestions. Also put all the resources in tabular format like Resource Name, Actions status Addition or Deletion or Update, Whats being changed, Cost) " },
+                                             { "role": "user", "content": '"$ESCAPED_PLAN_FILE_CONTENT"' }
+                                           ],
+                                           "max_tokens": 5000
+                                         }' > ${TF_DIR}/ai_response.json
+                                
+                                
+                                # Read the JSON file
+                                cd $TF_DIR
+                                JSON_CONTENT=$(cat ai_response.json)
+                                
+                                # Extract and format the 'content' field
+                                FORMATTED_CONTENT=$(echo "$JSON_CONTENT" | jq '.choices[0].message.content')
+                                
+                                # Print the formatted content to the console
+                                echo "$FORMATTED_CONTENT
+                            
                         """
                     }
                 }
