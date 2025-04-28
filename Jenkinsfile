@@ -1,9 +1,9 @@
 pipeline {
     agent any
     environment {
-        TF_DIR = "/home/shakil/terra-analyze-ai/"
+        TF_DIR = "/home/shakil/ai-usecases/terra-analyze-ai/"
         GIT_REPO_NAME = "terraform-ai-analytics"
-        TF_STATE = "/home/shakil/terra-analyze-ai/terraform-ai-analytics/terraform.tfstate"
+        TF_STATE = "/home/shakil/ai-usecases/terra-analyze-ai/terraform-ai-analytics/terraform.tfstate"
         MISTRAL_API_KEY = credentials('MISTRAL_API_KEY')
         MISTRAL_API = "https://api.mistral.ai/v1/chat/completions"
         INFRACOST_APIKEY = credentials('INFRACOST_APIKEY')
