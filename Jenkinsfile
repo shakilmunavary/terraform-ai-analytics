@@ -1,9 +1,9 @@
 pipeline {
     agent any
     environment {
-        TF_DIR = "/home/shakil/ai-usecases/terra-analyze-ai"
+        TF_DIR = "/home/shakil/terra-analyze-ai/"
         GIT_REPO_NAME = "terraform-ai-analytics"
-        TF_STATE = "/home/shakil/ai-usecases/terra-analyze-ai/terraform-ai-analytics/terraform.tfstate"
+        TF_STATE = "/home/shakil/terra-analyze-ai/terraform-ai-analytics/terraform.tfstate"
         MISTRAL_API_KEY = credentials('MISTRAL_API_KEY')
         MISTRAL_API = "https://api.mistral.ai/v1/chat/completions"
         INFRACOST_APIKEY = credentials('INFRACOST_APIKEY')
@@ -69,7 +69,7 @@ pipeline {
                              -d '{
                                    "model": "mistral-large-latest",
                                    "messages": [
-                                     { "role": "system", "content": "Analyze the terraform plan and recommend any suggestions. Also put all the resources in tabular format like Resource Name, Actions status Addition or Deletion or Update, Whats being changed. Also find the overall cost attached from Infra Cost. Review these inputs and give me your response content in beautiful HTML format with a good theme and look and feel instead of JSON. First Section: What's Being Changed, Second Section: Cost, Third Section: Recommendations" },
+                                     { "role": "system", "content": "Analyze the terraform plan and recommend any suggestions. Also put all the resources in tabular format like Resource Name, Actions status Addition or Deletion or Update, Whats being changed.Also find the over all cost attached from Infra Cost. Review this inputs give me your response content in beautiful html format with good theme and look and feel instead of json. First Sections Whats Being Changed second Sections Cost Third Section Recomendations" },
                                      { "role": "user", "content": '"\$PLAN_FILE_CONTENT"' },
                                      { "role": "user", "content": '"\$COST_FILE_CONTENT"' }
                                    ],
@@ -95,7 +95,6 @@ pipeline {
                 allowMissing: false,
                 alwaysLinkToLastBuild: true
             ])
-
-       }
+        }
     }
 }
