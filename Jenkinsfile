@@ -46,15 +46,7 @@ pipeline {
                         infracost configure set api_key \$INFRACOST_API_KEY
                         infracost breakdown --path=tfplan.binary --format json --out-file totalcost.json
 
-                        # Ensure jq is installed and has execute permissions
-                        if ! command -v jq &> /dev/null
-                        then
-                            echo "jq could not be found, installing..."
-                            sudo apt-get update
-                            sudo apt-get install -y jq
-                        fi
-                        sudo chmod +x /usr/bin/jq
-                        
+                       
                         # Ensure the ai_response.json file has the correct permissions
                         touch ${TF_DIR}/ai_response.json
                         chmod 666 ${TF_DIR}/ai_response.json
