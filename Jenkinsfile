@@ -46,14 +46,14 @@ pipeline {
                         infracost configure set api_key \$INFRACOST_API_KEY
                         infracost breakdown --path=tfplan.binary --format json --out-file totalcost.json
 
-                       
-                        # Ensure the ai_response.json file has the correct permissions
                         touch ${TF_DIR}/ai_response.json
                         chmod 666 ${TF_DIR}/ai_response.json
                         
-                        # Read the JSON file content
                         PLAN_FILE_CONTENT=\$(cat tfplan.json | jq -Rs .)
                         COST_FILE_CONTENT=\$(cat totalcost.json | jq -Rs .)
+
+                        # Add sleep to reduce burst pressure
+                        sleep 5
 
                         curl -X POST "$MISTRAL_API" \
                              -H "Authorization: Bearer \$API_KEY" \
@@ -68,7 +68,6 @@ pipeline {
                                    "max_tokens": 5000
                                  }' > ${TF_DIR}/ai_response.json
                         
-                        # Extract HTML content and save as output.html
                         jq -r '.choices[0].message.content' ${TF_DIR}/ai_response.json > ${TF_DIR}/output.html
                         """
                     }
