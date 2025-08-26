@@ -1,14 +1,15 @@
+
 pipeline {
     agent any
+
     environment {
-        TF_DIR = "/home/AI-SDP-PLATFORM/terra-analysis/"
-        GIT_REPO_NAME = "terraform-ai-analytics"
-        TF_STATE = "/home/AI-SDP-PLATFORM/terra-analysis/terraform-ai-analytics/terraform.tfstate"
+        TF_DIR           = "/home/AI-SDP-PLATFORM/terra-analysis/"
+        GIT_REPO_NAME    = "terraform-ai-analytics"
+        TF_STATE         = "/home/AI-SDP-PLATFORM/terra-analysis/terraform-ai-analytics/terraform.tfstate"
+        DEPLOYMENT_NAME  = "gpt-4o"
+        AZURE_API_BASE   = credentials('AZURE_API_BASE')
+        AZURE_API_VERSION = "2025-01-01-preview"
         AZURE_API_KEY = credentials('AZURE_API_KEY')
-        AZURE_API_BASE = credentials('AZURE_API_BASE')
-        AZURE_API_VERSION = credentials('AZURE_API_VERSION') 
-        DEPLOYMENT_NAME = "gpt-4o" // or your custom deployment name
-        INFRACOST_APIKEY = credentials('INFRACOST_APIKEY')
     }
 
     stages {
@@ -40,22 +41,23 @@ pipeline {
                     ]) {
                         sh """
                         #!/bin/bash
-                        echo "TERRA FORM PLAN"
+                        echo "Running Terraform Plan"
                         cd $TF_DIR/$GIT_REPO_NAME/terraform
                         terraform init
                         terraform plan -out=tfplan.binary
                         terraform show -json tfplan.binary > tfplan.json
+
+                        echo "Running Infracost Breakdown"
                         infracost configure set api_key \$INFRACOST_API_KEY
                         infracost breakdown --path=tfplan.binary --format json --out-file totalcost.json
 
+                        echo "Preparing AI Analysis"
                         touch ${TF_DIR}/ai_response.json
                         chmod 666 ${TF_DIR}/ai_response.json
 
                         PLAN_FILE_CONTENT=\$(cat tfplan.json | jq -Rs .)
 
-                        sleep 5
-
-                        curl -X POST "$AZURE_API_BASE/openai/deployments/$DEPLOYMENT_NAME/chat/completions?api-version=$AZURE_API_VERSION" \\
+                        curl -s -X POST "$AZURE_API_BASE/openai/deployments/$DEPLOYMENT_NAME/chat/completions?api-version=$AZURE_API_VERSION" \\
                              -H "Content-Type: application/json" \\
                              -H "api-key: \$API_KEY" \\
                              -d '{
