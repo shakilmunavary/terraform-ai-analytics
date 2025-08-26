@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terraform Plan Analysis Report</title>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --success: #27ae60;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 30px;
+            background: var(--primary);
+            color: white;
+            border-radius: 10px 10px 0 0;
+        }
+        h1, h2, h3 {
+            color: var(--dark);
+        }
+        h1 {
+            margin-bottom: 10px;
+        }
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        .section-title {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #e9e9e9;
+        }
+        .status-create {
+            color: var(--success);
+            font-weight: bold;
+        }
+        .status-update {
+            color: var(--warning);
+            font-weight: bold;
+        }
+        .status-delete {
+            color: var(--danger);
+            font-weight: bold;
+        }
+        .cost-summary {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .cost-card {
+            flex: 1;
+            min-width: 200px;
+            margin: 10px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .cost-card h3 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+        .cost-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--dark);
+        }
+        .recommendation {
+            background: #fffde7;
+            padding: 15px;
+            border-left: 5px solid var(--warning);
+            margin: 20px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        .recommendation h4 {
+            margin-top: 0;
+            color: var(--danger);
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+            font-size: 0.8em;
+            border-top: 1px solid #eee;
+        }
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-right: 5px;
+            background: var(--light);
+            color: var(--dark);
+        }
+        .high-cost {
+            color: var(--danger);
+            font-weight: bold;
+        }
+        .medium-cost {
+            color: var(--warning);
+            font-weight: bold;
+        }
+        .low-cost {
+            color: var(--success);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Terraform Plan Analysis Report</h1>
+            <p>Generated on 2025-08-26 | Region: us-east-1</p>
+        </header>
+
+        <!-- What's Being Changed Section -->
+        <div class="section">
+            <h2 class="section-title">1. Infrastructure Changes Overview</h2>
+            <p>This plan will create 9 new resources across your AWS infrastructure. Below is a detailed breakdown of all changes:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Resource Name</th>
+                        <th>Type</th>
+                        <th>Action</th>
+                        <th>Key Changes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>app_server</td>
+                        <td>aws_instance</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>Instance type: t2.micro</li>
+                                <li>AMI: ami-0c55b159cbfafe1f0 (Ubuntu)</li>
+                                <li>Security group: Allow SSH (port 22) from 0.0.0.0/0</li>
+                            </ul>
+                        </td>
+                    </tr>
+                 </tbody>
+            </table>
+
+            <div class="recommendation">
+                <h4>Security Warning</h4>
+                <p>Your current configuration has <strong>two critical security issues</strong>:</p>
+                <ol>
+                    <li><strong>SSH access (port 22)</strong> is open to the entire internet (0.0.0.0/0) on your EC2 instance</li>
+                    <li><strong>HTTP access (port 80)</strong> is open to the entire internet (0.0.0.0/0) on your load balancer</li>
+                </ol>
+                <p>This exposes your infrastructure to potential attacks. Consider restricting access to known IP ranges.</p>
+            </div>
+        </div>
+
+
+        <!-- Recommendations Section -->
+        <div class="section">
+            <h2 class="section-title">2. Comprehensive Recommendations</h2>
+
+            <div class="recommendation">
+                <h3>🔴 Critical Security Recommendations</h3>
+                <ol>
+                    <li><strong>Restrict SSH Access:</strong>
+                        <ul>
+                            <li>Change the security group rule for port 22 from 0.0.0.0/0 to your specific IP address or range</li>
+                            <li>Consider using AWS Session Manager instead of direct SSH access</li>
+                            <li>Implement bastion hosts for production environments</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="recommendation">
+                <h3>🟡 Architecture Recommendations</h3>
+                <ol>
+                    <li><strong>Multi-AZ Deployment:</strong>
+                        <ul>
+                            <li>Deploy your infrastructure across multiple Availability Zones for high availability</li>
+                            <li>Create at least 2 subnets in different AZs</li>
+                            <li>Deploy at least 2 EC2 instances behind the ALB</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="recommendation">
+                <h3>🟢 Operational Recommendations</h3>
+                <ol>
+                    <li><strong>Infrastructure as Code Best Practices:</strong>
+                        <ul>
+                            <li>Store your Terraform state in a remote backend (S3 with DynamoDB locking)</li>
+                            <li>Implement proper state management practices</li>
+                            <li>Use Terraform workspaces for environment separation</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="recommendation">
+                <h3>🔄 Terraform Code Improvements</h3>
+                <ol>
+                    <li><strong>Variable Usage:</strong>
+                        <ul>
+                            <li>Move hardcoded values (AMI ID, instance type, etc.) to variables</li>
+                            <li>Create different variable files for different environments</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+        </div>
+             <div class="recommendation">
+                <h3>🟢 Over All Compliance : 90%</h3>
+              </div>
+
+             <div class="recommendation">
+                <h3>🟢 Over All Pipeline Status : Pass </h3>
+              </div>
+
+        <footer>
+            <p>Terraform Plan Analysis Report | Generated using Terraform 1.13.0 and Infracost</p>
+            <p>Note: Cost estimates are based on AWS US East (N. Virginia) region pricing as of the report date.</p>
+        </footer>
+    </div>
+</body>
+</html>
