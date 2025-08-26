@@ -57,7 +57,7 @@ pipeline {
                              -d '{
                                    "model": "mistral-large-latest",
                                    "messages": [
-                                     { "role": "system", "content": "Analyze the terraform plan and recommend any suggestions. Also put all the resources in tabular format like Resource Name, Actions status Addition or Deletion or Update, Whats being changed.Review this inputs give me your response content in beautiful html format with good theme and look and feel instead of json. First Sections Whats Being Changed second Sections Section Recomendations" },
+                                     { "role": "system", "content": "Analyze the terraform plan and recommend any suggestions. Also put all the resources in tabular format like Resource Name, Actions status Addition or Deletion or Update, Whats being changed.Review this inputs give me your response content in beautiful html format with good theme and look and feel instead of json. First Sections Whats Being Changed second Sections Section Recomendations. Just give me only html content as response dont give me any additional contents." },
                                      { "role": "user", "content": '"\$PLAN_FILE_CONTENT"' }
                                    ],
                                    "max_tokens": 5000
