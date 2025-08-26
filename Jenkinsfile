@@ -13,7 +13,7 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 sh """
-                    rm -rf $GIT_REPO_NAME
+                    rm -rf ${GIT_REPO_NAME}
                     git clone 'https://github.com/shakilmunavary/terraform-ai-analytics.git'
                     sleep 3
                 """
@@ -23,7 +23,7 @@ pipeline {
         stage('Move To Working Directory') {
             steps {
                 sh """
-                    cp -rf $GIT_REPO_NAME $TF_DIR
+                    cp -rf ${GIT_REPO_NAME} ${TF_DIR}
                     sleep 3
                 """
             }
@@ -37,20 +37,20 @@ pipeline {
                         string(credentialsId: 'INFRACOSTAPIKEY', variable: 'INFRACOST_API_KEY')
                     ]) {
                         sh """
-                        #!/bin/bash
                         echo "Running Terraform Plan"
-                        cd $TF_DIR/$GIT_REPO_NAME/terraform
+                        cd ${TF_DIR}/${GIT_REPO_NAME}/terraform
                         terraform init
-
+                        sleep 3
                         terraform plan -out=tfplan.binary
-
+                        sleep 3
                         terraform show -json tfplan.binary > tfplan.json
-
+                        sleep 3
 
                         SAMPLE_HTML=\$(cat /home/AI-SDP-PLATFORM/terra-analysis/sample.html | jq -Rs .)
                         PLAN_JSON=\$(cat tfplan.json | jq -Rs .)
+                        sleep 3
 
-                        curl -X POST "$MISTRAL_API" \\
+                        curl -X POST "${MISTRAL_API}" \\
                              -H "Authorization: Bearer \$API_KEY" \\
                              -H "Content-Type: application/json" \\
                              -d '{
