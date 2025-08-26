@@ -74,7 +74,7 @@ pipeline {
                                          "content": "Terraform Plan JSON: \$PLAN_JSON"
                                        }
                                      ],
-                                     "max_tokens": 5000
+                                     "max_tokens": 20000
                                    }' > ${TF_DIR}/ai_response.json && break
                           echo "Retry \$i failed. Sleeping before next attempt..."
                           sleep 10
