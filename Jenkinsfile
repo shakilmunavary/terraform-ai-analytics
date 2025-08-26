@@ -82,18 +82,19 @@ pipeline {
         }
     }
 
-    post {
-        always {
-            node {
-                publishHTML([
-                    reportName: 'AI Analysis',
-                    reportDir: "${env.TF_DIR}",
-                    reportFiles: 'output.html',
-                    keepAll: true,
-                    allowMissing: false,
-                    alwaysLinkToLastBuild: true
-                ])
-            }
-        }
+post {
+    always {
+        publishHTML([
+            reportName: 'AI Analysis',
+            reportDir: "${env.TF_DIR}",
+            reportFiles: 'output.html',
+            keepAll: true,
+            allowMissing: false,
+            alwaysLinkToLastBuild: true
+        ])
     }
+}
+
+
+
 }
