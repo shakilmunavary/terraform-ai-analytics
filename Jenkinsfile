@@ -7,7 +7,7 @@ pipeline {
         AZURE_API_KEY = credentials('AZURE_API_KEY')
         AZURE_API_BASE = credentials('AZURE_API_BASE')
         AZURE_API_VERSION = credentials('AZURE_API_VERSION') 
-        DEPLOYMENT_NAME = "gpt-4" // or your custom deployment name
+        DEPLOYMENT_NAME = "gpt-4o" // or your custom deployment name
         INFRACOST_APIKEY = credentials('INFRACOST_APIKEY')
     }
 
