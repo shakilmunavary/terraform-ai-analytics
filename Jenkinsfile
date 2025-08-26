@@ -63,6 +63,7 @@ pipeline {
                                    "max_tokens": 5000
                                  }' > ${TF_DIR}/ai_response.json
                         
+                        sleep 5
                         jq -r '.choices[0].message.content' ${TF_DIR}/ai_response.json > ${TF_DIR}/output.html
                         """
                     }
