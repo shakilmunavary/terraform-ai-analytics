@@ -66,7 +66,7 @@ pipeline {
                                      { "role": "user", "content": '"\$PLAN_FILE_CONTENT"' },
                                      { "role": "user", "content": '"\$COST_FILE_CONTENT"' }
                                    ],
-                                   "max_tokens": 5000
+                                   "max_tokens": 10000
                                  }' > ${TF_DIR}/ai_response.json
                         
                         jq -r '.choices[0].message.content' ${TF_DIR}/ai_response.json > ${TF_DIR}/output.html
