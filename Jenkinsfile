@@ -38,17 +38,20 @@ pipeline {
                         echo "Running Terraform Plan"
                         cd ${TF_DIR}/${GIT_REPO_NAME}/terraform
                         terraform init
-                        sleep 3
+                        sleep 5
                         terraform plan -out=tfplan.binary
-                        sleep 3
+                        sleep 5
                         terraform show -json tfplan.binary > tfplan.json
-                        sleep 3
+                        sleep 5
 
                         which jq || { echo "jq not found"; exit 1; }
 
                         SAMPLE_HTML=\$(cat /home/AI-SDP-PLATFORM/terra-analysis/sample.html | jq -Rs .)
                         PLAN_JSON=\$(cat tfplan.json | jq -Rs .)
-                        sleep 3
+                        sleep 5
+
+                        echo "Sleeping before API call to avoid rate limit..."
+                        sleep 10
 
                         curl -X POST "${MISTRAL_API}" \\
                              -H "Authorization: Bearer \$API_KEY" \\
@@ -72,9 +75,9 @@ pipeline {
                                    "max_tokens": 5000
                                  }' > ${TF_DIR}/ai_response.json || { echo "Mistral API call failed"; exit 1; }
 
-                        sleep 3
+                        sleep 10
                         jq -r '.choices[0].message.content' ${TF_DIR}/ai_response.json > ${TF_DIR}/output.html
-                        sleep 3
+                        sleep 5
                         """
                     }
                 }
@@ -82,19 +85,17 @@ pipeline {
         }
     }
 
-post {
-    always {
-        publishHTML([
-            reportName: 'AI Analysis',
-            reportDir: "${env.TF_DIR}",
-            reportFiles: 'output.html',
-            keepAll: true,
-            allowMissing: false,
-            alwaysLinkToLastBuild: true
-        ])
+    post {
+        always {
+            sleep(time: 5, unit: 'SECONDS')
+            publishHTML([
+                reportName: 'AI Analysis',
+                reportDir: "${env.TF_DIR}",
+                reportFiles: 'output.html',
+                keepAll: true,
+                allowMissing: false,
+                alwaysLinkToLastBuild: true
+            ])
+        }
     }
-}
-
-
-
 }
