@@ -59,7 +59,7 @@ pipeline {
                                -H "Authorization: Bearer \$API_KEY" \\
                                -H "Content-Type: application/json" \\
                                -d '{
-                                     "model": "mistral-large-latest",
+                                     "model": "mistral-large-2411",
                                      "messages": [
                                        {
                                          "role": "system",
