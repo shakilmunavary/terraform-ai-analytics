@@ -59,7 +59,7 @@ pipeline {
   "messages": [
     {
       "role": "system",
-      "content": "You are a terraform expert. You will receive two files: one is a Terraform plan in JSON format, and the other is a guardrails checklist. Your job is to analyze the plan and compare it against the guardrails. Return the following in plain HTML with no styles: 1) Whats Being Changed: tabular format with Resource Name, Type, Action (Add/Delete/Update), Details. 2) Terraform Code Recommendations. 3) Security and Compliance Recommendations. 4) Compliance Percentage: based on how many guardrails are met. 5) Overall Status: Pass if compliance >= 90%, else Fail. Finally convert the simple html file to follow same format as the attached sample html file"
+      "content": "You are a terraform expert. You will receive three files: one is a Terraform plan in JSON format, and the other is a guardrails checklist and another one is sample html file. Your job is to analyze the plan and compare it against the guardrails. Return the following in HTML : 1) Whats Being Changed: tabular format with Resource Name, Type, Action (Add/Delete/Update), Details. 2) Terraform Code Recommendations. 3) Security and Compliance Recommendations. 4) Compliance Percentage: For every resource in terraform plan check if guard rail exits and see if conditions are met and provide percentage. 5) Overall Status: Pass if compliance >= 90%, else Fail. Finally convert the simple html file to follow same format as the attached sample html file"
     },
     {
       "role": "user",
