@@ -33,28 +33,27 @@ pipeline {
 
         stage('Run Terraform Plan & Send to Azure OpenAI') {
             steps {
-                script {
-                    withCredentials([
-                        string(credentialsId: 'AZURE_API_KEY', variable: 'API_KEY'),
-                        string(credentialsId: 'INFRACOST_APIKEY', variable: 'INFRACOST_API_KEY')
-                    ]) {
-                        sh """
-                        #!/bin/bash
-                        echo "Running Terraform Plan"
-                        cd $TF_DIR/$GIT_REPO_NAME/terraform
-                        terraform init
-                        terraform plan -out=tfplan.binary
-                        terraform show -json tfplan.binary > tfplan.json
+                withCredentials([
+                    string(credentialsId: 'AZURE_API_KEY', variable: 'API_KEY'),
+                    string(credentialsId: 'INFRACOST_APIKEY', variable: 'INFRACOST_API_KEY')
+                ]) {
+                    sh """
+                    #!/bin/bash
+                    echo "Running Terraform Plan"
+                    cd $TF_DIR/$GIT_REPO_NAME/terraform
+                    terraform init
+                    terraform plan -out=tfplan.binary
+                    terraform show -json tfplan.binary > tfplan.json
 
-                        echo "Running Infracost Breakdown"
-                        infracost configure set api_key \$INFRACOST_API_KEY
-                        infracost breakdown --path=tfplan.binary --format json --out-file totalcost.json
+                    echo "Running Infracost Breakdown"
+                    infracost configure set api_key \$INFRACOST_API_KEY
+                    infracost breakdown --path=tfplan.binary --format json --out-file totalcost.json
 
-                        echo "Preparing AI Analysis"
-                        PLAN_FILE_CONTENT=\$(jq -Rs . < tfplan.json)
-                        GUARDRAILS_CONTENT=\$(jq -Rs . < $TF_DIR/$GIT_REPO_NAME/guardrails/guardrails.txt)
+                    echo "Preparing AI Analysis"
+                    PLAN_FILE_CONTENT=\$(jq -Rs . < tfplan.json)
+                    GUARDRAILS_CONTENT=\$(jq -Rs . < $TF_DIR/$GIT_REPO_NAME/guardrails/guardrails.txt)
 
-                        cat <<EOF > ${TF_DIR}/payload.json
+                    cat <<EOF > ${TF_DIR}/payload.json
 {
   "messages": [
     {
@@ -67,7 +66,7 @@ pipeline {
     },
     {
       "role": "user",
-      "content": ${PLAN_FILE_CONTENT}
+      "content": \${PLAN_FILE_CONTENT}
     },
     {
       "role": "user",
@@ -75,7 +74,7 @@ pipeline {
     },
     {
       "role": "user",
-      "content": ${GUARDRAILS_CONTENT}
+      "content": \${GUARDRAILS_CONTENT}
     }
   ],
   "max_tokens": 10000,
@@ -83,15 +82,14 @@ pipeline {
 }
 EOF
 
-                        echo "Calling Azure OpenAI"
-                        curl -s -X POST "$AZURE_API_BASE/openai/deployments/$DEPLOYMENT_NAME/chat/completions?api-version=$AZURE_API_VERSION" \\
-                             -H "Content-Type: application/json" \\
-                             -H "api-key: \$API_KEY" \\
-                             -d @${TF_DIR}/payload.json > ${TF_DIR}/ai_response.json
+                    echo "Calling Azure OpenAI"
+                    curl -s -X POST "$AZURE_API_BASE/openai/deployments/$DEPLOYMENT_NAME/chat/completions?api-version=$AZURE_API_VERSION" \\
+                         -H "Content-Type: application/json" \\
+                         -H "api-key: \$API_KEY" \\
+                         -d @${TF_DIR}/payload.json > ${TF_DIR}/ai_response.json
 
-                        jq -r '.choices[0].message.content' ${TF_DIR}/ai_response.json > ${TF_DIR}/output.html
-                        """
-                    }
+                    jq -r '.choices[0].message.content' ${TF_DIR}/ai_response.json > ${TF_DIR}/output.html
+                    """
                 }
             }
         }
