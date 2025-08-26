@@ -61,7 +61,8 @@ pipeline {
                              -d '{
                                    "model": "mistral-large-latest",
                                    "messages": [
-                                     { "role": "system", "content": "Analyze the terraform plan and recommend any suggestions. Also put all the resources in tabular format like Resource Name, Actions status Addition or Deletion or Update, Whats being changed.Also find the over all cost attached from Infra Cost. Review this inputs give me your response content in beautiful html format with good theme and look and feel instead of json. First Sections Whats Being Changed second Sections Cost Third Section Recomendations" },
+                                     { "role": "system", "content": "You are a terraform expert. Analyze the terraform plan attached and give the below response in plain html with no styles.1)Whats Being Changed : here put the data in the tablur format like Resource Name, Type , Action (Add, Delete , Update), More Details 2)Terraform Code Recommendations : here provide any recomendations if needed in the terraform code.3)Security and Compliance : Provide recomendations on Security and complaince in the terraform plan.5)Compliance Percentage : Overall Percentage of compliance met
+6)Overall Status : Pass / Fail. Compliance Above 90% should be pass else fail." },
                                      { "role": "user", "content": '"\$PLAN_FILE_CONTENT"' },
                                      { "role": "user", "content": '"\$COST_FILE_CONTENT"' }
                                    ],
