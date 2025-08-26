@@ -51,29 +51,31 @@ pipeline {
                         infracost breakdown --path=tfplan.binary --format json --out-file totalcost.json
 
                         echo "Preparing AI Analysis"
-                        touch ${TF_DIR}/ai_response.json
-                        chmod 666 ${TF_DIR}/ai_response.json
+                        PLAN_FILE_CONTENT=\$(jq -Rs '.' < tfplan.json)
+                        GUARDRAILS_CONTENT=\$(jq -Rs '.' < $TF_DIR/$GIT_REPO_NAME/guardrails/guardrails.txt)
 
-                        PLAN_FILE_CONTENT=\$(cat tfplan.json | jq -Rs .)
-                        GUARDRAILS_CONTENT=\$(cat $TF_DIR/$GIT_REPO_NAME/guardrails/guardrails.txt | jq -Rs .)
+                        cat <<EOF > ${TF_DIR}/payload.json
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a terraform expert. Analyze the terraform plan and compare it against the provided guardrails checklist. Return the following in plain HTML with no styles: 1) Whats Being Changed: tabular format with Resource Name, Type, Action (Add/Delete/Update), Details. 2) Terraform Code Recommendations. 3) Security and Compliance Recommendations. 4) Compliance Percentage: based on how many guardrails are met. 5) Overall Status: Pass if compliance >= 90%, else Fail."
+    },
+    {
+      "role": "user",
+      "content": "Terraform Plan:\\n\${PLAN_FILE_CONTENT}\\n\\nGuardrails Checklist:\\n\${GUARDRAILS_CONTENT}"
+    }
+  ],
+  "max_tokens": 10000,
+  "temperature": 0.7
+}
+EOF
 
+                        echo "Calling Azure OpenAI"
                         curl -s -X POST "$AZURE_API_BASE/openai/deployments/$DEPLOYMENT_NAME/chat/completions?api-version=$AZURE_API_VERSION" \\
                              -H "Content-Type: application/json" \\
                              -H "api-key: \$API_KEY" \\
-                             -d '{
-                                   "messages": [
-                                     {
-                                       "role": "system",
-                                       "content": "You are a terraform expert. Analyze the terraform plan and compare it against the provided guardrails checklist. Return the following in plain HTML with no styles: 1) Whats Being Changed: tabular format with Resource Name, Type, Action (Add/Delete/Update), Details. 2) Terraform Code Recommendations. 3) Security and Compliance Recommendations. 4) Compliance Percentage: based on how many guardrails are met. 5) Overall Status: Pass if compliance >= 90%, else Fail."
-                                     },
-                                     {
-                                       "role": "user",
-                                       "content": "Terraform Plan:\\n" + \$PLAN_FILE_CONTENT + "\\n\\nGuardrails Checklist:\\n" + \$GUARDRAILS_CONTENT
-                                     }
-                                   ],
-                                   "max_tokens": 10000,
-                                   "temperature": 0.7
-                                 }' > ${TF_DIR}/ai_response.json
+                             -d @${TF_DIR}/payload.json > ${TF_DIR}/ai_response.json
 
                         jq -r '.choices[0].message.content' ${TF_DIR}/ai_response.json > ${TF_DIR}/output.html
                         """
