@@ -44,6 +44,8 @@ pipeline {
                         terraform show -json tfplan.binary > tfplan.json
                         sleep 3
 
+                        which jq || { echo "jq not found"; exit 1; }
+
                         SAMPLE_HTML=\$(cat /home/AI-SDP-PLATFORM/terra-analysis/sample.html | jq -Rs .)
                         PLAN_JSON=\$(cat tfplan.json | jq -Rs .)
                         sleep 3
@@ -56,7 +58,7 @@ pipeline {
                                    "messages": [
                                      {
                                        "role": "system",
-                                       "content": "You are an expert Terraform analyst. Analyze the provided terraform plan and generate a response in HTML format that mimics the structure, theme, and styling of the reference HTML provided. The output should contain two sections: (1) What’s Being Changed — a table listing Resource Name, Action (Add/Update/Delete), and Details of Change; (2) Recommendations — a styled section with improvement suggestions. (3) Compliance Setion. Put some over all complaiance percentage. (4) Over All pipleine status. If Compliance is above 90% put as Pass else as fail. Do not return JSON or markdown. Only return valid, styled HTML content similar to the reference."
+                                       "content": "You are an expert Terraform analyst. Analyze the provided terraform plan and generate a response in HTML format that mimics the structure, theme, and styling of the reference HTML provided. The output should contain four sections: (1) What’s Being Changed — a table listing Resource Name, Action (Add/Update/Delete), and Details of Change; (2) Recommendations — a styled section with improvement suggestions; (3) Compliance Section — include an overall compliance percentage; (4) Overall Pipeline Status — if compliance is above 90%, mark as Pass, else Fail. Do not return JSON or markdown. Only return valid, styled HTML content similar to the reference."
                                      },
                                      {
                                        "role": "user",
@@ -68,7 +70,7 @@ pipeline {
                                      }
                                    ],
                                    "max_tokens": 5000
-                                 }' > ${TF_DIR}/ai_response.json
+                                 }' > ${TF_DIR}/ai_response.json || { echo "Mistral API call failed"; exit 1; }
 
                         sleep 3
                         jq -r '.choices[0].message.content' ${TF_DIR}/ai_response.json > ${TF_DIR}/output.html
