@@ -51,19 +51,31 @@ pipeline {
                         infracost breakdown --path=tfplan.binary --format json --out-file totalcost.json
 
                         echo "Preparing AI Analysis"
-                        PLAN_FILE_CONTENT=\$(jq -Rs '.' < tfplan.json)
-                        GUARDRAILS_CONTENT=\$(jq -Rs '.' < $TF_DIR/$GIT_REPO_NAME/guardrails/guardrails.txt)
+                        PLAN_FILE_CONTENT=\$(jq -Rs . < tfplan.json)
+                        GUARDRAILS_CONTENT=\$(jq -Rs . < $TF_DIR/$GIT_REPO_NAME/guardrails/guardrails.txt)
 
                         cat <<EOF > ${TF_DIR}/payload.json
 {
   "messages": [
     {
       "role": "system",
-      "content": "You are a terraform expert. Analyze the terraform plan and compare it against the provided guardrails checklist. Return the following in plain HTML with no styles: 1) Whats Being Changed: tabular format with Resource Name, Type, Action (Add/Delete/Update), Details. 2) Terraform Code Recommendations. 3) Security and Compliance Recommendations. 4) Compliance Percentage: based on how many guardrails are met. 5) Overall Status: Pass if compliance >= 90%, else Fail."
+      "content": "You are a terraform expert. You will receive two files: one is a Terraform plan in JSON format, and the other is a guardrails checklist. Your job is to analyze the plan and compare it against the guardrails. Return the following in plain HTML with no styles: 1) Whats Being Changed: tabular format with Resource Name, Type, Action (Add/Delete/Update), Details. 2) Terraform Code Recommendations. 3) Security and Compliance Recommendations. 4) Compliance Percentage: based on how many guardrails are met. 5) Overall Status: Pass if compliance >= 90%, else Fail."
     },
     {
       "role": "user",
-      "content": "Terraform Plan:\\n\${PLAN_FILE_CONTENT}\\n\\nGuardrails Checklist:\\n\${GUARDRAILS_CONTENT}"
+      "content": "Terraform Plan File:\\n"
+    },
+    {
+      "role": "user",
+      "content": ${PLAN_FILE_CONTENT}
+    },
+    {
+      "role": "user",
+      "content": "Guardrails Checklist File:\\n"
+    },
+    {
+      "role": "user",
+      "content": ${GUARDRAILS_CONTENT}
     }
   ],
   "max_tokens": 10000,
