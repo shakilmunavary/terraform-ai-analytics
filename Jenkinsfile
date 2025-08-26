@@ -50,7 +50,6 @@ pipeline {
                         chmod 666 ${TF_DIR}/ai_response.json
                         
                         PLAN_FILE_CONTENT=\$(cat tfplan.json | jq -Rs .)
-                        COST_FILE_CONTENT=\$(cat totalcost.json | jq -Rs .)
 
                         # Add sleep to reduce burst pressure
                         sleep 5
@@ -63,8 +62,7 @@ pipeline {
                                    "messages": [
                                      { "role": "system", "content": "You are a terraform expert. Analyze the terraform plan attached and give the below response in plain html with no styles.1)Whats Being Changed : here put the data in the tablur format like Resource Name, Type , Action (Add, Delete , Update), More Details 2)Terraform Code Recommendations : here provide any recomendations if needed in the terraform code.3)Security and Compliance : Provide recomendations on Security and complaince in the terraform plan.5)Compliance Percentage : Overall Percentage of compliance met
 6)Overall Status : Pass / Fail. Compliance Above 90% should be pass else fail." },
-                                     { "role": "user", "content": '"\$PLAN_FILE_CONTENT"' },
-                                     { "role": "user", "content": '"\$COST_FILE_CONTENT"' }
+                                     { "role": "user", "content": '"\$PLAN_FILE_CONTENT"' }
                                    ],
                                    "max_tokens": 10000
                                  }' > ${TF_DIR}/ai_response.json
