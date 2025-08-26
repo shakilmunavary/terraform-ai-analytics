@@ -45,40 +45,26 @@ pipeline {
                         sleep 5
 
                         which jq || { echo "jq not found"; exit 1; }
-
-                        SAMPLE_HTML=\$(cat /home/AI-SDP-PLATFORM/terra-analysis/sample.html | jq -Rs .)
                         PLAN_JSON=\$(cat tfplan.json | jq -Rs .)
-                        sleep 5
 
-                        echo "Sleeping before API call to avoid rate limit..."
+                        curl -X POST "${MISTRAL_API}" \\
+                             -H "Authorization: Bearer \$API_KEY" \\
+                             -H "Content-Type: application/json" \\
+                             -d '{
+                                   "model": "mistral-large-2411",
+                                   "messages": [
+                                     {
+                                       "role": "system",
+                                       "content": "You are an expert Terraform analyst. Analyze the provided terraform plan and generate a response output which should contain five sections: (1) What’s Being Changed — a table listing Resource Name, Action (Add/Update/Delete), and Details of Change; (2) Terraform Code Recommendations; (3) Security and Compliance Section — Provide all security and compliance recommendations; (4) Compliance Percentage — Include an overall compliance percentage based on best practices; (5) Overall Pipeline Status — if compliance is above 90%, mark as Pass, else Fail. Do not return JSON or markdown. Only return valid, simple plain HTML as output and don't add any styles."
+                                     },
+                                     {
+                                       "role": "user",
+                                       "content": "Terraform Plan JSON: \$PLAN_JSON"
+                                     }
+                                   ],
+                                   "max_tokens": 20000
+                                 }' > ${TF_DIR}/ai_response.json 
                         sleep 10
-
-                        echo "Attempting Mistral API call with retry logic..."
-                        for i in {1..3}; do
-                          curl -X POST "${MISTRAL_API}" \\
-                               -H "Authorization: Bearer \$API_KEY" \\
-                               -H "Content-Type: application/json" \\
-                               -d '{
-                                     "model": "mistral-large-2411",
-                                     "messages": [
-                                       {
-                                         "role": "system",
-                                         "content": "You are an expert Terraform analyst. Analyze the provided terraform plan and generate a response in HTML format that mimics the structure, theme, and styling of the reference HTML provided. The output should contain four sections: (1) What’s Being Changed — a table listing Resource Name, Action (Add/Update/Delete), and Details of Change; (2) Recommendations — a styled section with improvement suggestions; (3) Compliance Section — include an overall compliance percentage; (4) Overall Pipeline Status — if compliance is above 90%, mark as Pass, else Fail. Do not return JSON or markdown. Only return valid, styled HTML content similar to the reference."
-                                       },
-                                       {
-                                         "role": "user",
-                                         "content": "Reference HTML for formatting: \$SAMPLE_HTML"
-                                       },
-                                       {
-                                         "role": "user",
-                                         "content": "Terraform Plan JSON: \$PLAN_JSON"
-                                       }
-                                     ],
-                                     "max_tokens": 20000
-                                   }' > ${TF_DIR}/ai_response.json && break
-                          echo "Retry \$i failed. Sleeping before next attempt..."
-                          sleep 10
-                        done
 
                         if [ ! -s ${TF_DIR}/ai_response.json ]; then
                           echo "API failed after retries. Writing fallback HTML..."
