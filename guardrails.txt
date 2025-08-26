@@ -1,0 +1,37 @@
+# =========================
+# EC2 Instance Guardrails
+# =========================
+1. EC2 instances must use approved AMIs (e.g., hardened or CIS-compliant).
+2. EC2 instances must have IMDSv2 enabled.
+3. EC2 instances must not use public IP unless explicitly required.
+4. EC2 instances must be launched in private subnets unless justified.
+5. EC2 instances must have termination protection enabled.
+6. EC2 instances must be tagged with "Owner", "Environment", and "CostCenter".
+
+# =========================
+# Load Balancer Guardrails
+# =========================
+7. Load Balancers must use TLS 1.2 or higher.
+8. Load Balancers must have access logs enabled.
+9. Load Balancers must not expose ports other than 443 and 80 unless justified.
+10. Load Balancers must use secure SSL certificates from trusted issuers.
+11. Load Balancers must be deployed in multiple AZs for high availability.
+
+# =========================
+# S3 Bucket Guardrails
+# =========================
+12. S3 buckets must have encryption enabled (AES256 or KMS).
+13. S3 buckets must block all public access.
+14. S3 buckets must enable versioning.
+15. S3 buckets must enable access logging.
+16. S3 buckets must have lifecycle policies to manage storage costs.
+17. S3 buckets must be tagged with "Owner", "Environment", and "DataClassification".
+
+# =========================
+# Security Group Guardrails
+# =========================
+18. Security Groups must not allow 0.0.0.0/0 on ports 22, 3389, or 80 unless explicitly required.
+19. Security Groups must have descriptions for all rules.
+20. Security Groups must not allow all traffic (all protocols, all ports).
+21. Security Groups must be scoped to least privilege.
+22. Security Groups must be attached only to required resources.
