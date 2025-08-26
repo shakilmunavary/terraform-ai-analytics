@@ -49,7 +49,7 @@ pipeline {
                         
                         PLAN_FILE_CONTENT=\$(cat tfplan.json | jq -Rs .)
                         # Add sleep to reduce burst pressure
-                        sleep 5
+                        sleep 4
 
                         curl -X POST "$MISTRAL_API" \
                              -H "Authorization: Bearer \$API_KEY" \
