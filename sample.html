@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -158,16 +159,23 @@
             color: var(--success);
             font-weight: bold;
         }
+        .pass {
+            color: var(--success);
+            font-weight: bold;
+        }
+        .fail {
+            color: var(--danger);
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Terraform Plan Analysis Report</h1>
-            <p>Generated on 2025-08-26 | Region: us-east-1</p>
+            <p>Generated on 2025-08-27 | Region: us-east-1</p>
         </header>
 
-        <!-- What's Being Changed Section -->
         <div class="section">
             <h2 class="section-title">1. Infrastructure Changes Overview</h2>
             <p>This plan will create 9 new resources across your AWS infrastructure. Below is a detailed breakdown of all changes:</p>
@@ -178,103 +186,279 @@
                         <th>Resource Name</th>
                         <th>Type</th>
                         <th>Action</th>
-                        <th>Key Changes</th>
+                        <th>Key Details</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>app_server</td>
+                        <td>aws_instance.app_server</td>
                         <td>aws_instance</td>
                         <td class="status-create">Create</td>
                         <td>
                             <ul>
                                 <li>Instance type: t2.micro</li>
                                 <li>AMI: ami-0c55b159cbfafe1f0 (Ubuntu)</li>
-                                <li>Security group: Allow SSH (port 22) from 0.0.0.0/0</li>
+                                <li>Security Group: aws_security_group.ec2_sg (Allows inbound traffic on port 22)</li>
                             </ul>
                         </td>
                     </tr>
-                 </tbody>
+                    <tr>
+                        <td>aws_lb.app_lb</td>
+                        <td>aws_lb</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>Load Balancer Type: application</li>
+                                <li>Name: app-load-balancer</li>
+                                <li>Internal: false</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>aws_lb_listener.http</td>
+                        <td>aws_lb_listener</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>Port: 80</li>
+                                <li>Protocol: HTTP</li>
+                                <li>Default Action: forward to aws_lb_target_group.app_tg</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>aws_lb_target_group.app_tg</td>
+                        <td>aws_lb_target_group</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>Name: app-target-group</li>
+                                <li>Port: 80</li>
+                                <li>Protocol: HTTP</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>aws_lb_target_group_attachment.attach</td>
+                        <td>aws_lb_target_group_attachment</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>Attaches aws_instance.app_server to aws_lb_target_group.app_tg</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>aws_security_group.alb_sg</td>
+                        <td>aws_security_group</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>Description: Managed by Terraform</li>
+                                <li>Ingress Rule: TCP on port 80 from CIDR 10.0.1.43/32</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>aws_security_group.ec2_sg</td>
+                        <td>aws_security_group</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>Description: Managed by Terraform</li>
+                                <li>Ingress Rule: TCP on port 22 from CIDR 10.0.1.40/32</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>aws_subnet.public</td>
+                        <td>aws_subnet</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>CIDR Block: 10.0.1.0/24</li>
+                                <li>map_public_ip_on_launch: true</li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>aws_vpc.main</td>
+                        <td>aws_vpc</td>
+                        <td class="status-create">Create</td>
+                        <td>
+                            <ul>
+                                <li>CIDR Block: 10.0.0.0/16</li>
+                                <li>enable_dns_support: true</li>
+                            </ul>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
-
-            <div class="recommendation">
-                <h4>Security Warning</h4>
-                <p>Your current configuration has <strong>two critical security issues</strong>:</p>
-                <ol>
-                    <li><strong>SSH access (port 22)</strong> is open to the entire internet (0.0.0.0/0) on your EC2 instance</li>
-                    <li><strong>HTTP access (port 80)</strong> is open to the entire internet (0.0.0.0/0) on your load balancer</li>
-                </ol>
-                <p>This exposes your infrastructure to potential attacks. Consider restricting access to known IP ranges.</p>
-            </div>
         </div>
 
-
-        <!-- Recommendations Section -->
         <div class="section">
-            <h2 class="section-title">2. Comprehensive Recommendations</h2>
-
+            <h2 class="section-title">2. Terraform Code Recommendations</h2>
             <div class="recommendation">
-                <h3>🔴 Critical Security Recommendations</h3>
-                <ol>
-                    <li><strong>Restrict SSH Access:</strong>
-                        <ul>
-                            <li>Change the security group rule for port 22 from 0.0.0.0/0 to your specific IP address or range</li>
-                            <li>Consider using AWS Session Manager instead of direct SSH access</li>
-                            <li>Implement bastion hosts for production environments</li>
-                        </ul>
-                    </li>
-                </ol>
-            </div>
-
-            <div class="recommendation">
-                <h3>🟡 Architecture Recommendations</h3>
-                <ol>
-                    <li><strong>Multi-AZ Deployment:</strong>
-                        <ul>
-                            <li>Deploy your infrastructure across multiple Availability Zones for high availability</li>
-                            <li>Create at least 2 subnets in different AZs</li>
-                            <li>Deploy at least 2 EC2 instances behind the ALB</li>
-                        </ul>
-                    </li>
-                </ol>
-            </div>
-
-            <div class="recommendation">
-                <h3>🟢 Operational Recommendations</h3>
-                <ol>
-                    <li><strong>Infrastructure as Code Best Practices:</strong>
-                        <ul>
-                            <li>Store your Terraform state in a remote backend (S3 with DynamoDB locking)</li>
-                            <li>Implement proper state management practices</li>
-                            <li>Use Terraform workspaces for environment separation</li>
-                        </ul>
-                    </li>
-                </ol>
-            </div>
-
-            <div class="recommendation">
-                <h3>🔄 Terraform Code Improvements</h3>
                 <ol>
                     <li><strong>Variable Usage:</strong>
                         <ul>
-                            <li>Move hardcoded values (AMI ID, instance type, etc.) to variables</li>
-                            <li>Create different variable files for different environments</li>
+                            <li>The plan uses hardcoded CIDR blocks (10.0.1.43/32, 10.0.1.40/32) for security group ingress rules. It is recommended to use variables or data sources for these values to make the code more reusable and dynamic.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Resource Naming:</strong>
+                        <ul>
+                            <li>Some resources are using default or generic names. It is a best practice to use meaningful names with a consistent naming convention.</li>
                         </ul>
                     </li>
                 </ol>
             </div>
         </div>
-             <div class="recommendation">
-                <h3>🟢 Over All Compliance : 90%</h3>
-              </div>
 
-             <div class="recommendation">
-                <h3>🟢 Over All Pipeline Status : Pass </h3>
-              </div>
+        <div class="section">
+            <h2 class="section-title">3. Security and Compliance Recommendations</h2>
+            <div class="recommendation">
+                <h4>Security Warning:</h4>
+                <p>The current configuration has several security risks:</p>
+                <ol>
+                    <li>The <strong>EC2 instance</strong> is created without an associated public IP, but it is placed in a subnet with `map_public_ip_on_launch = true`. This is a misconfiguration and can lead to unintended public exposure.</li>
+                    <li>The security group `aws_security_group.ec2_sg` allows SSH access (port 22) from a specific CIDR block. While not 0.0.0.0/0, it's a good practice to use a more specific IP, or even better, use AWS Session Manager instead of direct SSH.</li>
+                    <li>The security group `aws_security_group.alb_sg` allows traffic on port 80 (HTTP). While it is from a specific CIDR, it is best practice to use HTTPS (port 443) for all public-facing applications.</li>
+                    <li>The Load Balancer `aws_lb.app_lb` is being created, but there are no guardrails in place for it like `enable_deletion_protection` being set to `true` or being deployed in multiple Availability Zones.</li>
+                    <li>The `aws_instance.app_server` is missing essential tags such as "Owner", "Environment", and "CostCenter", which is a compliance failure.</li>
+                </ol>
+            </div>
+        </div>
 
+        <div class="section">
+            <h2 class="section-title">4. Guardrails Compliance</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Resource Name</th>
+                        <th>Guardrail Element</th>
+                        <th>Status</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>aws_instance.app_server</td>
+                        <td>EC2 instances must use approved AMIs.</td>
+                        <td class="pass">PASS</td>
+                        <td>The AMI `ami-0c55b159cbfafe1f0` is used, which is considered an approved Ubuntu AMI.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_instance.app_server</td>
+                        <td>EC2 instances must have IMDSv2 enabled.</td>
+                        <td class="fail">FAIL</td>
+                        <td>IMDSv2 is not explicitly enabled. It is recommended to use `metadata_options { http_tokens = "required" }`.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_instance.app_server</td>
+                        <td>EC2 instances must not use public IP unless explicitly required.</td>
+                        <td class="pass">PASS</td>
+                        <td>The `associate_public_ip_address` is set to `false`.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_instance.app_server</td>
+                        <td>EC2 instances must be launched in private subnets unless justified.</td>
+                        <td class="fail">FAIL</td>
+                        <td>The instance is launched in `aws_subnet.public` which has `map_public_ip_on_launch = true`.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_instance.app_server</td>
+                        <td>EC2 instances must have termination protection enabled.</td>
+                        <td class="fail">FAIL</td>
+                        <td>`disable_api_termination` is not set to `true`.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_instance.app_server</td>
+                        <td>EC2 instances must be tagged with "Owner", "Environment", and "CostCenter".</td>
+                        <td class="fail">FAIL</td>
+                        <td>The `tags` attribute is not present in the plan.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_lb.app_lb</td>
+                        <td>Load Balancers must use TLS 1.2 or higher.</td>
+                        <td class="fail">FAIL</td>
+                        <td>The listener `aws_lb_listener.http` uses `protocol = "HTTP"`. It should be `HTTPS` with a secure SSL policy.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_lb.app_lb</td>
+                        <td>Load Balancers must have access logs enabled.</td>
+                        <td class="fail">FAIL</td>
+                        <td>`access_logs` are not enabled in the plan.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_lb.app_lb</td>
+                        <td>Load Balancers must not expose ports other than 443 and 80 unless justified.</td>
+                        <td class="pass">PASS</td>
+                        <td>The plan exposes only port 80.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_lb.app_lb</td>
+                        <td>Load Balancers must use secure SSL certificates from trusted issuers.</td>
+                        <td class="fail">FAIL</td>
+                        <td>No SSL certificate is configured for the listener.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_lb.app_lb</td>
+                        <td>Load Balancers must be deployed in multiple AZs for high availability.</td>
+                        <td class="fail">FAIL</td>
+                        <td>The plan only uses one subnet `aws_subnet.public`. A second subnet in a different AZ should be added.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_security_group.ec2_sg</td>
+                        <td>Security Groups must not allow 0.0.0.0/0 on ports 22, 3389, or 80 unless explicitly required.</td>
+                        <td class="pass">PASS</td>
+                        <td>The ingress rule for port 22 is restricted to a CIDR `10.0.1.40/32`, not `0.0.0.0/0`.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_security_group.ec2_sg</td>
+                        <td>Security Groups must have descriptions for all rules.</td>
+                        <td class="fail">FAIL</td>
+                        <td>The ingress rule in `aws_security_group.ec2_sg` has an empty description.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_security_group.alb_sg</td>
+                        <td>Security Groups must not allow 0.0.0.0/0 on ports 22, 3389, or 80 unless explicitly required.</td>
+                        <td class="pass">PASS</td>
+                        <td>The ingress rule for port 80 is restricted to a CIDR `10.0.1.43/32`, not `0.0.0.0/0`.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_security_group.alb_sg</td>
+                        <td>Security Groups must have descriptions for all rules.</td>
+                        <td class="fail">FAIL</td>
+                        <td>The ingress rule in `aws_security_group.alb_sg` has an empty description.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_security_group.ec2_sg</td>
+                        <td>Security Groups must be scoped to least privilege.</td>
+                        <td class="pass">PASS</td>
+                        <td>The rule is scoped to a specific CIDR, not 0.0.0.0/0.</td>
+                    </tr>
+                    <tr>
+                        <td>aws_security_group.alb_sg</td>
+                        <td>Security Groups must be scoped to least privilege.</td>
+                        <td class="pass">PASS</td>
+                        <td>The rule is scoped to a specific CIDR, not 0.0.0.0/0.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">5. Overall Status</h2>
+            <div class="recommendation">
+                <h3>Overall Compliance: 47.06%</h3>
+            </div>
+            <div class="recommendation">
+                <h3>Overall Pipeline Status: FAIL</h3>
+            </div>
+        </div>
         <footer>
-            <p>Terraform Plan Analysis Report | Generated using Terraform 1.13.0 and Infracost</p>
-            <p>Note: Cost estimates are based on AWS US East (N. Virginia) region pricing as of the report date.</p>
+            <p>Terraform Plan Analysis Report | Generated using Terraform 1.13.0</p>
+            <p>Note: Compliance is based on a predefined set of guardrails.</p>
         </footer>
     </div>
 </body>
