@@ -102,6 +102,19 @@ EOF
             }
         }
 
+        stage('Publish AI Analysis Report') {
+            steps {
+                publishHTML([
+                    reportName: 'AI Analysis',
+                    reportDir: "${TF_DIR}",
+                    reportFiles: 'output.html',
+                    keepAll: true,
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true
+                ])
+            }
+        }
+
         stage('Manual Validation') {
             steps {
                 script {
@@ -141,19 +154,6 @@ EOF
                 echo "❌ Pipeline rejected. Halting further actions."
                 // Add rejection handling here
             }
-        }
-    }
-
-    post {
-        always {
-            publishHTML([
-                reportName: 'AI Analysis',
-                reportDir: "${TF_DIR}",
-                reportFiles: 'output.html',
-                keepAll: true,
-                allowMissing: false,
-                alwaysLinkToLastBuild: true
-            ])
         }
     }
 }
