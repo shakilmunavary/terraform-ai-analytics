@@ -1,4 +1,3 @@
-
 provider "aws" {
   region = "us-east-1"
 }
@@ -20,7 +19,7 @@ resource "aws_security_group" "alb_sg" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["10.0.1.43/32"]
   }
 }
 
@@ -31,7 +30,7 @@ resource "aws_security_group" "ec2_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["10.0.1.40/32"]
   }
 }
 
@@ -65,6 +64,7 @@ resource "aws_instance" "app_server" {
   ami             = "ami-0c55b159cbfafe1f0"  # Example AMI, replace with valid ID
   instance_type   = "t2.micro"
   subnet_id       = aws_subnet.public.id
+  associate_public_ip_address = false
   security_groups = [aws_security_group.ec2_sg.id]
 
   user_data = <<-EOF
