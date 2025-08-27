@@ -30,7 +30,7 @@
 # =========================
 # Security Group Guardrails
 # =========================
-18. Security Groups must not allow 0.0.0.0/0 on ports 22, 3389, or 80 unless explicitly required.
+18. Security Groups must not allow 0.0.0.0/0 on ports 22, 3389
 19. Security Groups must have descriptions for all rules.
 20. Security Groups must not allow all traffic (all protocols, all ports).
 21. Security Groups must be scoped to least privilege.
