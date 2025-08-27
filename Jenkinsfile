@@ -70,11 +70,11 @@ pipeline {
 
 Your task is to analyze the Terraform plan and compare it against the guardrails. Return a single HTML output that includes the following six sections:
 
-1️⃣ Change Summary Table
+1️⃣ Change Summary Table. This table should have Resource Name | Resource Type (Ec2, S3) | Action (Create , Modify, Delete) | Additional Details
 2️⃣ Terraform Code Recommendations
-3️⃣ Security and Compliance Recommendations
-4️⃣ Guardrail Compliance Summary Table
-5️⃣ Overall Status
+3️⃣ Security and Compliance Recommendations. General Security Compliance Issues Found.
+4️⃣ Guardrail Compliance Summary Table. For each resource in terraform plan, it should check corresponding guard rails from the file and provide a table like Resource Name | Guard Rail Rule | Pass / Fail.
+5️⃣ Overall Status. It should be cumulative Pass percentage of Guard rails. 
 6️⃣ HTML Formatting"""
                             ],
                             [ role: "user", content: "Terraform Plan File:\\n" ],
