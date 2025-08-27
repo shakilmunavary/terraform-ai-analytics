@@ -37,7 +37,7 @@ pipeline {
                     string(credentialsId: 'AZURE_API_KEY', variable: 'API_KEY'),
                     string(credentialsId: 'INFRACOST_APIKEY', variable: 'INFRACOST_API_KEY')
                 ]) {
-                    sh """
+                    sh '''
                     echo "Running Terraform Plan"
                     cd $TF_DIR/$GIT_REPO_NAME/terraform
                     terraform init
@@ -45,90 +45,20 @@ pipeline {
                     terraform show -json tfplan.binary > tfplan.json
 
                     echo "Running Infracost Breakdown"
-                    infracost configure set api_key \$INFRACOST_API_KEY
+                    infracost configure set api_key $INFRACOST_API_KEY
                     infracost breakdown --path=tfplan.binary --format json --out-file totalcost.json
 
                     echo "Preparing AI Analysis"
-                    PLAN_FILE_CONTENT=\$(jq -Rs . < tfplan.json)
-                    GUARDRAILS_CONTENT=\$(jq -Rs . < $TF_DIR/$GIT_REPO_NAME/guardrails/guardrails.txt)
-                    SAMPLE_HTML=\$(jq -Rs . < $TF_DIR/$GIT_REPO_NAME/sample.html)
+                    PLAN_FILE_CONTENT=$(jq -Rs . < tfplan.json)
+                    GUARDRAILS_CONTENT=$(jq -Rs . < $TF_DIR/$GIT_REPO_NAME/guardrails/guardrails.txt)
+                    SAMPLE_HTML=$(jq -Rs . < $TF_DIR/$GIT_REPO_NAME/sample.html)
 
                     cat <<EOF > ${TF_DIR}/payload.json
 {
   "messages": [
     {
       "role": "system",
-      "content": "You are a Terraform compliance expert. You will receive three input files:
-1. A Terraform Plan in JSON format
-2. A Guardrails Checklist in structured text format
-3. A Sample HTML Template for visual formatting reference
-
-Your task is to analyze the Terraform plan and compare it against the guardrails. Return a single HTML output that includes the following six sections:
-
----
-
-1️⃣ **Change Summary Table**
-
-- Title: "What's Being Changed"
-- Iterate through **all resources** in the Terraform plan JSON, including `resource_changes`, `planned_values`, and `configuration` blocks
-- For each resource, extract:
-  - `Resource Name`
-  - `Resource Type`
-  - `Action` (Add / Delete / Update)
-  - `Details` (summarize key attributes being added, removed, or modified)
-
-Ensure **no resource is skipped**, even if its action is `no-op` or its changes are minimal.
-
----
-
-2️⃣ **Terraform Code Recommendations**
-
-- Provide actionable suggestions to improve code quality, modularity, and maintainability
-- Include recommendations for tagging, naming conventions, and resource reuse
-- Reference specific resource types where applicable
-
----
-
-3️⃣ **Security and Compliance Recommendations**
-
-- Identify misconfigurations or missing security controls
-- Reference specific guardrail IDs from the checklist
-- Suggest remediations in clear, concise language
-
----
-
-4️⃣ **Guardrail Compliance Summary Table**
-
-- Title: "Guardrail Compliance Summary"
-- For each resource in the Terraform plan:
-  - `Terraform Resource`
-  - `Guardrail Type` (e.g., EC2, S3, SG)
-  - `Missing Rules` (list rule IDs or descriptions)
-  - `Percentage Met` (based on applicable rules)
-
-At the end of the table, calculate and display:
-- `Overall Guardrail Coverage %` (average across all resources)
-
----
-
-5️⃣ **Overall Status**
-
-- Return one of the following:
-  - `Status: PASS` → if overall coverage ≥ 90%
-  - `Status: FAIL` → if overall coverage < 90%
-
----
-
-6️⃣ **HTML Formatting**
-
-- Format the final output to match the visual structure and styling of the provided sample HTML file
-- Use semantic HTML tags (`<table>`, `<thead>`, `<tbody>`, `<tr>`, `<td>`)
-- Apply inline styles or classes consistent with the sample template
-
----
-
-Ensure the analysis is **complete**, **deterministic**, and **covers all resources** present in the Terraform plan JSON. Do not omit any resource, even if it appears in a nested module or has no direct attribute changes.
-"
+      "content": "You are a Terraform compliance expert. You will receive three input files:\\n1. A Terraform Plan in JSON format\\n2. A Guardrails Checklist in structured text format\\n3. A Sample HTML Template for visual formatting reference\\n\\nYour task is to analyze the Terraform plan and compare it against the guardrails. Return a single HTML output that includes the following six sections:\\n\\n1️⃣ Change Summary Table\\n- Title: \\"What's Being Changed\\"\\n- Iterate through all resources in the Terraform plan JSON, including resource_changes, planned_values, and configuration blocks\\n- For each resource, extract:\\n  - Resource Name\\n  - Resource Type\\n  - Action (Add / Delete / Update)\\n  - Details (summarize key attributes being added, removed, or modified)\\n\\nEnsure no resource is skipped, even if its action is no-op or its changes are minimal.\\n\\n2️⃣ Terraform Code Recommendations\\n- Provide actionable suggestions to improve code quality, modularity, and maintainability\\n\\n3️⃣ Security and Compliance Recommendations\\n- Identify misconfigurations or missing security controls\\n- Reference specific guardrail IDs from the checklist\\n\\n4️⃣ Guardrail Compliance Summary Table\\n- Title: \\"Guardrail Compliance Summary\\"\\n- For each resource in the Terraform plan:\\n  - Terraform Resource\\n  - Guardrail Type (e.g., EC2, S3, SG)\\n  - Missing Rules\\n  - Percentage Met\\n- End with Overall Guardrail Coverage %\\n\\n5️⃣ Overall Status\\n- Status: PASS if coverage ≥ 90%\\n- Status: FAIL if coverage < 90%\\n\\n6️⃣ HTML Formatting\\n- Match the visual structure and styling of the provided sample HTML file\\n- Use semantic HTML tags and inline styles"
     },
     {
       "role": "user",
@@ -136,7 +66,7 @@ Ensure the analysis is **complete**, **deterministic**, and **covers all resourc
     },
     {
       "role": "user",
-      "content": \${PLAN_FILE_CONTENT}
+      "content": ${PLAN_FILE_CONTENT}
     },
     {
       "role": "user",
@@ -144,7 +74,7 @@ Ensure the analysis is **complete**, **deterministic**, and **covers all resourc
     },
     {
       "role": "user",
-      "content": \${SAMPLE_HTML}
+      "content": ${SAMPLE_HTML}
     },
     {
       "role": "user",
@@ -152,7 +82,7 @@ Ensure the analysis is **complete**, **deterministic**, and **covers all resourc
     },
     {
       "role": "user",
-      "content": \${GUARDRAILS_CONTENT}
+      "content": ${GUARDRAILS_CONTENT}
     }
   ],
   "max_tokens": 10000,
@@ -163,11 +93,11 @@ EOF
                     echo "Calling Azure OpenAI"
                     curl -s -X POST "$AZURE_API_BASE/openai/deployments/$DEPLOYMENT_NAME/chat/completions?api-version=$AZURE_API_VERSION" \\
                          -H "Content-Type: application/json" \\
-                         -H "api-key: \$API_KEY" \\
+                         -H "api-key: $API_KEY" \\
                          -d @${TF_DIR}/payload.json > ${TF_DIR}/ai_response.json
 
                     jq -r '.choices[0].message.content' ${TF_DIR}/ai_response.json > ${TF_DIR}/output.html
-                    """
+                    '''
                 }
             }
         }
